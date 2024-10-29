@@ -48,6 +48,24 @@ export default function MenuScreen({ navigation }) {
             <Text style={styles.menuItem}>Bebidas</Text>
           </TouchableOpacity>
         </View>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItemContainer}
+            onPress={() => navigation.navigate('PizzasScreen')}
+          >
+            <Text style={styles.menuItem}>Pizzas</Text>
+            <Text style={styles.menuSubItem}>Son ricas</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItemContainer}
+            onPress={() => navigation.navigate('EmpanadasScreen')}
+          >
+            <Text style={styles.menuItem}>Empanadas</Text>
+            <Text style={styles.menuSubItem}>CARNE, POLLO Y QUESO</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
