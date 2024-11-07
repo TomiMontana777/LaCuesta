@@ -1,125 +1,148 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, Image } from 'react-native';
+import { db } from '../firebaseConfig';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 
-export default function HamburguesasScreen({ navigation }) {
-  const [notes, setNotes] = useState(''); // Para manejar las notas adicionales
-  const [selectedItems, setSelectedItems] = useState({}); // Para manejar la cantidad de cada hamburguesa
+export default function PizzasScreen({ route, navigation }) {
+  const { table } = route.params; // Recibe la mesa seleccionada
+  const [notes, setNotes] = useState('');
+  const [selectedItems, setSelectedItems] = useState({});
+  const [pizzas, setPizzas] = useState([]);
 
-  // Manejar el botón de confirmar
-const handleConfirm = () => {
-    console.log('Pedido confirmado:', selectedItems, 'Notas:', notes);
-    // Aquí podrías procesar el pedido, enviarlo a una base de datos, etc.
-};
+  useEffect(() => {
+    const fetchPizzas = async () => {
+      try {
+        const pizzasCollection = await getDocs(collection(db, 'pizas'));
+        const pizzasList = pizzasCollection.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPizzas(pizzasList);
+      } catch (error) {
+        console.error("Error al obtener las pizzas", error);
+      }
+    };
+    fetchPizzas();
+  }, []);
 
-return (
+  const handleConfirm = async () => {
+    try {
+      const pedidoRef = await addDoc(collection(db, 'detalles_pedido'), {
+        mesa: table.mesa, // Guarda el número de mesa
+        items: selectedItems,
+        notes,
+        timestamp: new Date(),
+      });
+      
+      setSelectedItems({});
+      setNotes('');
+      alert('Pedido de pizzas confirmado y guardado.');
+      
+      // Navega a la pantalla de Detalle de Pedido después de guardar
+      navigation.navigate('DetalleScreen', { pedidoId: pedidoRef.id });
+    } catch (error) {
+      console.error("Error al guardar el pedido", error);
+    }
+  };
+
+  return (
     <ScrollView contentContainerStyle={styles.container}>
-    
-      {/* Botón de volver */}
-    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>Back</Text>
-    </TouchableOpacity>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>Volver</Text>
+      </TouchableOpacity>
 
-      {/* Imagen de Hamburguesa */}
-    <Image 
+      <Text style={styles.tableText}>Mesa seleccionada: {table.mesa}</Text>
+
+      <Image 
         source={require('../assets/images/pizza.jpg')} // Asegúrate de tener esta imagen en tu directorio
-        style={styles.PizzaImagen} 
-    />
+        style={styles.pizzaImage} 
+      />
 
-      {/* Lista de Hamburguesas */}
-    <Text style={styles.title}>PIZZAS</Text>
+      <Text style={styles.title}>Pizzas</Text>
 
-    {[
-        'Pizza Comun',
-        'Pizza Especial',
-        'Pizza Napolitana',
-        'Pizza Primavera ',
-        'Pizza Guri',
-        'Pizza cuatro quesos',
-        'Pizza Con fritas',
-        'Pizza Con Anchoas',
-
-    ].map((item, index) => (
-        <View key={index} style={styles.itemContainer}>
-        <Text style={styles.itemText}>{item}</Text>
-        <View style={styles.counterContainer}>
+      {pizzas.map((item) => (
+        <View key={item.id} style={styles.itemContainer}>
+          <Text style={styles.itemText}>{item.nombre} - ${item.precio}</Text>
+          <View style={styles.counterContainer}>
             <TouchableOpacity
-            onPress={() =>
+              onPress={() =>
                 setSelectedItems({
-                ...selectedItems,
-                [item]: (selectedItems[item] || 0) + 1/2
+                  ...selectedItems,
+                  [item.id]: (selectedItems[item.id] || 0) + 1/2
                 })
-            }
+              }
             >
-            <Text style={styles.counterButton}>+</Text>
+              <Text style={styles.counterButton}>+</Text>
             </TouchableOpacity>
 
             <Text style={styles.counterValue}>
-            {selectedItems[item] ? selectedItems[item] : 0}
+              {selectedItems[item.id] ? selectedItems[item.id] : 0}
             </Text>
 
             <TouchableOpacity
-            onPress={() =>
+              onPress={() =>
                 setSelectedItems({
-                ...selectedItems,
-                [item]: Math.max((selectedItems[item] || 0) - 1/2, 0)
+                  ...selectedItems,
+                  [item.id]: Math.max((selectedItems[item.id] || 0) - 1/2, 0)
                 })
-            }
+              }
             >
-            <Text style={styles.counterButton}>-</Text>
+              <Text style={styles.counterButton}>-</Text>
             </TouchableOpacity>
+          </View>
         </View>
-        </View>
-    ))}
+      ))}
 
-      {/* Campo para Notas Adicionales */}
-    <TextInput
+      <TextInput
         style={styles.notesInput}
         placeholder="Notas adicionales para el pedido"
         value={notes}
         onChangeText={setNotes}
-    />
+      />
 
-      {/* Botón Confirmar */}
-    <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
+      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
         <Text style={styles.confirmButtonText}>Confirmar Pedido</Text>
-    </TouchableOpacity>
+      </TouchableOpacity>
     </ScrollView>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-container: {
+  container: {
     padding: 20,
     backgroundColor: '#0C0D15',
     flexGrow: 1,
-},
-backButton: {
+  },
+  backButton: {
     marginBottom: 20,
     alignSelf: 'flex-start',
     backgroundColor: '#D97C4B',
     borderRadius: 8,
     padding: 10,
-},
-backButtonText: {
+  },
+  backButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
-},
-PizzaImagen: {
+  },
+  tableText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  pizzaImage: {
     width: 120,
     height: 120,
     resizeMode: 'contain',
     alignSelf: 'center',
     marginBottom: 20,
-},
-title: {
+  },
+  title: {
     fontSize: 24,
     color: '#FFF',
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-},
-itemContainer: {
+  },
+  itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -127,26 +150,26 @@ itemContainer: {
     backgroundColor: '#D97C4B',
     padding: 10,
     borderRadius: 8,
-},
-itemText: {
+  },
+  itemText: {
     color: 'white',
     fontSize: 16,
-},
-counterContainer: {
+  },
+  counterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-},
-counterButton: {
+  },
+  counterButton: {
     color: 'white',
     fontSize: 24,
     paddingHorizontal: 10,
-},
-counterValue: {
+  },
+  counterValue: {
     color: 'white',
     fontSize: 18,
     marginHorizontal: 10,
-},
-notesInput: {
+  },
+  notesInput: {
     backgroundColor: '#EEE',
     borderRadius: 8,
     paddingVertical: 10,
@@ -154,17 +177,17 @@ notesInput: {
     fontSize: 16,
     marginBottom: 20,
     marginTop: 20,
-},
-confirmButton: {
+  },
+  confirmButton: {
     backgroundColor: 'green',
     borderRadius: 8,
     paddingVertical: 15,
     alignItems: 'center',
     marginTop: 10,
-},
-confirmButtonText: {
+  },
+  confirmButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
-},
+  },
 });

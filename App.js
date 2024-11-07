@@ -17,6 +17,8 @@ import EmpanadasScreen from './screens/EmpanadasScreen'
 
 import PizzasScreen from './screens/PizzasScreen'
 
+import DetalleScreen from './screens/DetalleScreen'
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -30,6 +32,7 @@ export default function App() {
         <Stack.Screen name="BebidasScreen" component={BebidasScreen} options={{ title: 'Bebidas' }} />
         <Stack.Screen name="EmpanadasScreen" component={EmpanadasScreen} options={{ title: 'Empanadas' }} />
         <Stack.Screen name="PizzasScreen" component={PizzasScreen} options={{ title: 'Pizza' }} />
+        <Stack.Screen name="DetalleScreen" component={DetalleScreen} options={{ title: 'Detalle' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
