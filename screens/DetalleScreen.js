@@ -65,8 +65,10 @@ export default function DetallePedidoScreen() {
           <Text style={styles.itemText}>Comida: 
             {detalle.items && Object.keys(detalle.items).length > 0 ? (
               Object.keys(detalle.items).map(item => {
-                const nombreComida = nombresComidas[item] || item; // Usa el nombre si está disponible
-                return `${nombreComida}: ${detalle.items[item]}`;
+                if (hamburguesas.includes(item)) {
+                  return `${item} (hamburguesa): ${detalle.items[item]}`; 
+                }
+                return `${item}: ${detalle.items[item]}`;
               }).join('')
             ) : (
               "No hay comida en este pedido."
